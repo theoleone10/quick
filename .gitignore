@@ -1,0 +1,7 @@
+deploy/secrets/
+data/
+__pycache__/
+*.pem
+*.key
+*.env
+!deploy/quick.env.example

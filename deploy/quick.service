@@ -1,0 +1,26 @@
+[Unit]
+Description=Quick sites
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=quick
+Group=quick
+Environment=QUICK_HOST=0.0.0.0 QUICK_PORT=443 QUICK_DATA=/var/lib/quick
+Environment=QUICK_TLS_CERT=/etc/quick/origin.pem QUICK_TLS_KEY=/etc/quick/origin.key
+EnvironmentFile=/etc/quick/quick.env
+ExecStart=/opt/quick/venv/bin/python -u /opt/quick/server.py
+Restart=always
+RestartSec=2
+
+# Bind :443 without root, and lock the process down.
+AmbientCapabilities=CAP_NET_BIND_SERVICE
+CapabilityBoundingSet=CAP_NET_BIND_SERVICE
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+ReadWritePaths=/var/lib/quick
+
+[Install]
+WantedBy=multi-user.target

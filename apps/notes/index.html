@@ -1,0 +1,700 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Notes Lab</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.2/marked.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.1.6/purify.min.js"></script>
+<script src="/_quick/quick.js"></script>
+<style>
+:root {
+  --bg:#f6f5f2; --panel:#ffffff; --fg:#1d1b18; --mut:#6f6a62; --line:#e4e1da; --soft:#efede8;
+  --acc:#4f46e5; --acc-fg:#fff; --acc-soft:#eceafd; --ok:#15803d; --ok-soft:#dcfce7; --warn:#b45309; --warn-soft:#fef3c7;
+  --bad:#b91c1c; --bad-soft:#fee2e2; --shadow:0 1px 2px rgba(0,0,0,.05),0 4px 16px rgba(0,0,0,.04);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg:#121110; --panel:#1b1a18; --fg:#f1efea; --mut:#a29d94; --line:#2d2b28; --soft:#24221f;
+    --acc:#818cf8; --acc-fg:#111; --acc-soft:#26254a; --ok:#4ade80; --ok-soft:#14321f; --warn:#fbbf24; --warn-soft:#3a2d10;
+    --bad:#f87171; --bad-soft:#3b1717; --shadow:none;
+  }
+}
+* { box-sizing:border-box; }
+body { margin:0; background:var(--bg); color:var(--fg); font:15px/1.55 ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif; }
+button, input, textarea, select { font:inherit; color:inherit; }
+button { cursor:pointer; border:1px solid var(--line); background:var(--panel); border-radius:9px; padding:8px 13px; }
+button:hover { border-color:var(--mut); }
+button:disabled { opacity:.5; cursor:default; }
+button.primary { background:var(--acc); border-color:var(--acc); color:var(--acc-fg); font-weight:600; }
+button.ghost { border-color:transparent; background:transparent; color:var(--mut); padding:6px 8px; }
+button.ghost:hover { color:var(--fg); background:var(--soft); }
+input[type=text], textarea, select { background:var(--panel); border:1px solid var(--line); border-radius:9px; padding:9px 11px; width:100%; }
+textarea { resize:vertical; }
+:focus-visible { outline:2px solid var(--acc); outline-offset:2px; }
+
+.app { display:grid; grid-template-columns:250px 1fr; min-height:100vh; }
+aside { border-right:1px solid var(--line); padding:20px 14px; position:sticky; top:0; height:100vh; overflow:auto; }
+.brand { font-weight:750; font-size:18px; display:flex; gap:8px; align-items:center; padding:0 6px 16px; }
+.brand span { color:var(--acc); }
+.nb { display:flex; justify-content:space-between; align-items:center; width:100%; text-align:left; border:0; background:none; padding:8px 10px; border-radius:8px; margin-bottom:2px; }
+.nb:hover { background:var(--soft); }
+.nb.on { background:var(--acc-soft); font-weight:600; }
+.nb small { color:var(--mut); font-weight:400; }
+.newnb { display:flex; gap:6px; margin-top:10px; }
+.mobilebar { display:none; }
+main { padding:24px 28px 80px; max-width:900px; width:100%; }
+.head { display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:6px; }
+.head h1 { margin:0; font-size:24px; flex:1; min-width:0; overflow-wrap:anywhere; }
+.tabs { display:flex; gap:4px; border-bottom:1px solid var(--line); margin:14px 0 20px; overflow-x:auto; }
+.tabs button { border:0; background:none; border-radius:0; padding:10px 12px; color:var(--mut); border-bottom:2px solid transparent; white-space:nowrap; }
+.tabs button.on { color:var(--fg); border-bottom-color:var(--acc); font-weight:600; }
+.badge { display:inline-block; font-size:12px; padding:1px 8px; border-radius:99px; background:var(--soft); color:var(--mut); font-weight:500; }
+.badge.ok { background:var(--ok-soft); color:var(--ok); } .badge.warn { background:var(--warn-soft); color:var(--warn); }
+.badge.bad { background:var(--bad-soft); color:var(--bad); } .badge.acc { background:var(--acc-soft); color:var(--acc); }
+.card { background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:16px; box-shadow:var(--shadow); margin-bottom:12px; }
+.mut { color:var(--mut); } .small { font-size:13px; }
+.row { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+.grow { flex:1; min-width:0; }
+.empty { text-align:center; padding:40px 16px; color:var(--mut); }
+
+.drop { border:2px dashed var(--line); border-radius:12px; padding:22px; text-align:center; margin-bottom:16px; transition:.15s; }
+.drop.over { border-color:var(--acc); background:var(--acc-soft); }
+.page { display:grid; grid-template-columns:auto 72px 1fr; gap:12px; align-items:start; }
+.thumb { width:72px; height:92px; border-radius:6px; object-fit:cover; background:var(--soft); border:1px solid var(--line); display:grid; place-items:center; font-size:12px; color:var(--mut); }
+.page .actions { display:flex; gap:2px; flex-wrap:wrap; margin-top:4px; }
+.live { white-space:pre-wrap; font-size:13px; color:var(--mut); max-height:120px; overflow:auto; margin-top:6px; }
+.preview { margin-top:10px; border-top:1px solid var(--line); padding-top:10px; }
+
+.tools { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin:12px 0 18px; }
+.tool { text-align:left; padding:14px; border-radius:12px; display:flex; flex-direction:column; gap:4px; }
+.tool b { font-size:15px; } .tool span { font-size:12.5px; color:var(--mut); }
+.tool.on { border-color:var(--acc); background:var(--acc-soft); }
+.opts { display:grid; grid-template-columns:1fr 150px; gap:10px; }
+.out { min-height:40px; }
+.md { overflow-wrap:anywhere; }
+.md h1,.md h2,.md h3 { line-height:1.25; margin:1.1em 0 .4em; } .md h1 { font-size:1.35em; } .md h2 { font-size:1.18em; } .md h3 { font-size:1.05em; }
+.md :first-child { margin-top:0; }
+.md pre, .md code { background:var(--soft); border-radius:6px; } .md code { padding:1px 5px; } .md pre { padding:10px; overflow-x:auto; }
+.md table { border-collapse:collapse; display:block; overflow-x:auto; } .md td,.md th { border:1px solid var(--line); padding:4px 8px; }
+.md blockquote { border-left:3px solid var(--line); margin:0; padding-left:12px; color:var(--mut); }
+.katex-display { overflow-x:auto; overflow-y:hidden; padding:2px 0; }
+.q { border-top:1px solid var(--line); padding:16px 0; } .q:first-child { border-top:0; padding-top:0; }
+.choice { display:flex; gap:10px; align-items:flex-start; padding:8px 10px; border:1px solid var(--line); border-radius:9px; margin:6px 0; cursor:pointer; }
+.choice:hover { border-color:var(--mut); }
+.choice.right { border-color:var(--ok); background:var(--ok-soft); } .choice.wrong { border-color:var(--bad); background:var(--bad-soft); }
+.choice input { margin-top:5px; }
+.feedback { margin-top:10px; padding:10px 12px; border-radius:9px; background:var(--soft); }
+details { border:1px solid var(--line); border-radius:9px; padding:8px 12px; margin-top:10px; }
+details summary { cursor:pointer; font-weight:600; }
+.spinner { display:inline-block; width:14px; height:14px; border:2px solid var(--line); border-top-color:var(--acc); border-radius:50%; animation:spin .8s linear infinite; vertical-align:-2px; }
+@keyframes spin { to { transform:rotate(360deg); } }
+
+.flash { min-height:220px; display:flex; flex-direction:column; justify-content:center; text-align:center; font-size:18px; cursor:pointer; user-select:none; }
+.flash .side { font-size:12px; text-transform:uppercase; letter-spacing:.08em; color:var(--mut); margin-bottom:10px; }
+.flash .back { border-top:1px dashed var(--line); margin-top:16px; padding-top:16px; }
+.grade { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
+.cardrow { display:grid; grid-template-columns:1fr 1fr auto; gap:12px; align-items:start; padding:10px 0; border-top:1px solid var(--line); font-size:14px; }
+.stats { display:flex; gap:24px; flex-wrap:wrap; }
+.stat b { display:block; font-size:24px; }
+.toast { position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:var(--fg); color:var(--bg); padding:10px 16px; border-radius:10px; font-size:14px; z-index:9; max-width:calc(100vw - 32px); }
+[hidden] { display:none !important; }
+main a { color:var(--fg); text-decoration:none; font-weight:500; }
+main a:hover { color:var(--acc); }
+.page .actions a { font-weight:400; font-size:15px; }
+.card > .cardrow:first-child, .card > b + .cardrow { border-top:0; }
+
+@media (max-width:760px) {
+  .app { grid-template-columns:1fr; }
+  aside { display:none; }
+  .mobilebar { display:flex; gap:8px; align-items:center; padding:12px 16px; border-bottom:1px solid var(--line); background:var(--panel); position:sticky; top:0; z-index:5; }
+  .mobilebar .brand { padding:0; }
+  main { padding:18px 16px 80px; }
+  .tools { grid-template-columns:1fr 1fr; }
+  .opts { grid-template-columns:1fr; }
+  .cardrow { grid-template-columns:1fr auto; } .cardrow .b { grid-column:1; }
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside>
+    <div class="brand">✍️ Notes <span>Lab</span></div>
+    <div id="nblist"></div>
+    <form class="newnb" id="newnb"><input type="text" id="newnbname" placeholder="New notebook…" maxlength="60"><button>Add</button></form>
+  </aside>
+  <div>
+    <div class="mobilebar">
+      <div class="brand">✍️</div>
+      <select id="nbselect" class="grow"></select>
+      <button id="mnew">+ New</button>
+    </div>
+    <main id="main"></main>
+  </div>
+</div>
+<input type="file" id="filepick" accept="image/*,application/pdf" multiple hidden>
+<input type="file" id="camera" accept="image/*" capture="environment" hidden>
+
+<script>
+/* ---------------------------------------------------------------- data */
+const C = {
+  notebooks: quick.db.collection("notebooks"),
+  pages: quick.db.collection("pages"),
+  outputs: quick.db.collection("outputs"),
+  cards: quick.db.collection("cards"),
+};
+const S = { notebooks: [], pages: [], outputs: [], cards: [], loaded: 0 };
+let current = load("nl.current");
+let tab = load("nl.tab") || "pages";
+const excluded = new Set();          // page ids left out of study tools
+const live = {};                      // page id -> text streaming in right now
+let editing = null;                   // page id whose transcript is being edited
+let openPreview = new Set();          // page ids with transcript expanded
+let review = null;                    // flashcard review session
+let viewing = null;                   // saved output being viewed
+
+function load(k) { try { return localStorage.getItem(k); } catch { return null; } }
+function save(k, v) { try { localStorage.setItem(k, v); } catch {} }
+const now = () => Date.now() / 1000;
+const nbPages = () => S.pages.filter(p => p.notebookId === current).sort((a, b) => a.createdAt - b.createdAt);
+const nbCards = () => S.cards.filter(c => c.notebookId === current);
+const nbOutputs = () => S.outputs.filter(o => o.notebookId === current).sort((a, b) => b.createdAt - a.createdAt);
+const dueCards = () => nbCards().filter(c => (c.due || 0) <= now());
+
+for (const [name, col] of Object.entries(C)) {
+  col.watch(docs => {
+    S[name] = docs;
+    if (++S.loaded >= 4 || S.loaded > 4) render();
+  });
+}
+
+/* ---------------------------------------------------------------- helpers */
+function h(tag, attrs = {}, ...kids) {
+  const el = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs || {})) {
+    if (v == null || v === false) continue;
+    if (k.startsWith("on")) el.addEventListener(k.slice(2), v);
+    else if (k === "class") el.className = v;
+    else if (k === "html") el.innerHTML = v;
+    else el.setAttribute(k, v === true ? "" : v);
+  }
+  for (const kid of kids.flat()) if (kid != null && kid !== false) el.append(kid.nodeType ? kid : String(kid));
+  return el;
+}
+function toast(msg) {
+  const t = h("div", { class: "toast" }, msg);
+  document.body.append(t);
+  setTimeout(() => t.remove(), 3500);
+}
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+/** Markdown + LaTeX. Math is \( \) inline, \[ \] or $$ $$ display. Single $ is left alone (money). */
+function md(src, inline = false) {
+  const math = [];
+  // Placeholder must survive Markdown untouched (marked rewrites NUL bytes), so plain letters + digits.
+  const keep = (t, display) => { math.push([t, display]); return `QMATHX${math.length - 1}XQ`; };
+  src = String(src || "")
+    .replace(/\$\$([\s\S]+?)\$\$/g, (_, t) => keep(t, true))
+    .replace(/\\\[([\s\S]+?)\\\]/g, (_, t) => keep(t, true))
+    .replace(/\\\(([\s\S]+?)\\\)/g, (_, t) => keep(t, false));
+  let html = DOMPurify.sanitize(inline ? marked.parseInline(src) : marked.parse(src));
+  return html.replace(/QMATHX(\d+)XQ/g, (_, i) => {
+    const [t, display] = math[+i];
+    try { return katex.renderToString(t, { displayMode: display, throwOnError: false }); }
+    catch { return esc(t); }
+  });
+}
+const mdEl = (src, cls = "md") => h("div", { class: cls, html: md(src) });
+const mdInline = src => h("span", { class: "md", html: md(src, true) });
+function ago(t) {
+  const s = now() - t;
+  if (s < 60) return "just now"; if (s < 3600) return Math.floor(s / 60) + "m ago";
+  if (s < 86400) return Math.floor(s / 3600) + "h ago"; return Math.floor(s / 86400) + "d ago";
+}
+
+/* ---------------------------------------------------------------- AI prompts */
+const MATH_RULES = "Write math in LaTeX using \\( ... \\) for inline and \\[ ... \\] for display. Never use single $ signs for math; write money plainly, like $500.";
+const TRANSCRIBE_SYSTEM = `You transcribe photos of handwritten study notes into clean Markdown.
+- Be faithful: keep the student's wording, order, headings, lists, numbering, arrows and emphasis. Do not add, explain or correct content.
+- ${MATH_RULES}
+- Tables become Markdown tables. Diagrams, graphs and sketches become a short italic description, e.g. *[Diagram: cash-flow timeline with $1000 at year 0 and $200/yr for 5 years]*, including any labels and numbers on them.
+- Mark words you cannot read as [?]. Ignore crossed-out text.
+- Output only the transcription, with no preamble.`;
+const STUDY_SYSTEM = `You are a sharp, encouraging study coach for a university engineering student. Base your work on the student's notes provided in <page> tags.
+Where the notes are thin, you may use standard textbook knowledge, but say so briefly. Prefer the notation and methods used in the notes.
+${MATH_RULES}`;
+
+function notesContext() {
+  const pages = nbPages().filter(p => !excluded.has(p.id) && p.status === "done" && p.text);
+  if (!pages.length) throw new Error("No read pages selected. Add notes on the Pages tab first.");
+  return pages.map((p, i) => `<page number="${i + 1}" file="${esc(p.name)}">\n${p.text}\n</page>`).join("\n\n");
+}
+
+/* ---------------------------------------------------------------- transcription queue */
+const queue = []; let running = 0; const active = new Set();
+function enqueue(id) { if (!queue.includes(id) && !active.has(id)) { queue.push(id); pump(); } }
+function pump() {
+  while (running < 2 && queue.length) {
+    const id = queue.shift(); running++; active.add(id);
+    transcribe(id).finally(() => { running--; active.delete(id); delete live[id]; pump(); render(); });
+  }
+}
+async function transcribe(id) {
+  const p = S.pages.find(x => x.id === id) || await C.pages.get(id);
+  await C.pages.update(id, { status: "reading", error: "" });
+  try {
+    const blob = await (await fetch(p.fileUrl)).blob();
+    const isPdf = p.mime === "application/pdf";
+    const block = isPdf ? await quick.ai.pdf(blob) : await quick.ai.image(blob);
+    const ask = isPdf ? "Transcribe these handwritten notes. Before each page's content put a line with only *Page N*."
+                      : "Transcribe this page of handwritten notes.";
+    const r = await quick.ai.stream([{ role: "user", content: [block, { type: "text", text: ask }] }], {
+      system: TRANSCRIBE_SYSTEM, max_tokens: 32000,
+      onText: (_, full) => { live[id] = full; const el = document.querySelector(`[data-live="${id}"]`); if (el) { el.textContent = full; el.scrollTop = el.scrollHeight; } },
+    });
+    if (r.stop_reason === "refusal") throw new Error("Claude declined to read this page");
+    await C.pages.update(id, { status: "done", text: r.text.trim(), truncated: r.stop_reason === "max_tokens" });
+  } catch (e) {
+    await C.pages.update(id, { status: "error", error: e.message });
+  }
+}
+async function addFiles(files) {
+  if (!current) return toast("Create a notebook first");
+  for (const f of files) {
+    if (!/^image\/|^application\/pdf$/.test(f.type)) { toast(`Skipped ${f.name}: use photos or PDFs`); continue; }
+    try {
+      const up = await quick.files.upload(f);
+      const page = await C.pages.create({ notebookId: current, fileId: up.id, fileUrl: up.url, mime: f.type, name: f.name, status: "pending", text: "" });
+      enqueue(page.id);
+    } catch (e) { toast(`Upload failed for ${f.name}: ${e.message}`); }
+  }
+}
+
+/* ---------------------------------------------------------------- render: shell */
+let pendingRender = false;
+function render() {
+  if (!S.notebooks.find(n => n.id === current)) current = S.notebooks[0]?.id || null;
+  renderNav();
+  const a = document.activeElement;
+  if (a && a.closest && a.closest("#main") && (a.tagName === "TEXTAREA" || a.tagName === "INPUT") && a.dataset.keep !== undefined) {
+    pendingRender = true; return;  // don't wipe something the user is typing in
+  }
+  renderMain();
+}
+document.addEventListener("focusout", () => setTimeout(() => { if (pendingRender) { pendingRender = false; render(); } }, 0));
+
+function renderNav() {
+  const list = document.getElementById("nblist");
+  list.replaceChildren(...S.notebooks.slice().sort((a, b) => a.createdAt - b.createdAt).map(n => {
+    const due = S.cards.filter(c => c.notebookId === n.id && (c.due || 0) <= now()).length;
+    const pages = S.pages.filter(p => p.notebookId === n.id).length;
+    return h("button", { class: "nb" + (n.id === current ? " on" : ""), onclick: () => select(n.id) },
+      h("span", { class: "grow" }, n.name), h("small", {}, due ? `${due} due · ${pages}p` : `${pages}p`));
+  }));
+  const sel = document.getElementById("nbselect");
+  sel.replaceChildren(...S.notebooks.map(n => h("option", { value: n.id, selected: n.id === current }, n.name)));
+  if (!S.notebooks.length) sel.append(h("option", {}, "No notebooks yet"));
+}
+function select(id) { current = id; save("nl.current", id); excluded.clear(); review = null; viewing = null; resetStudy(); render(); }
+function setTab(t) { tab = t; save("nl.tab", t); review = null; viewing = null; renderMain(); }
+
+async function newNotebook(name) {
+  name = (name || "").trim();
+  if (!name) return;
+  const n = await C.notebooks.create({ name });
+  select(n.id); setTab("pages");
+}
+document.getElementById("newnb").onsubmit = e => { e.preventDefault(); const i = document.getElementById("newnbname"); newNotebook(i.value); i.value = ""; };
+document.getElementById("mnew").onclick = () => newNotebook(prompt("Notebook name (e.g. APSC 221 – Ch 7)"));
+document.getElementById("nbselect").onchange = e => select(e.target.value);
+
+function renderMain() {
+  const main = document.getElementById("main");
+  const nb = S.notebooks.find(n => n.id === current);
+  if (S.loaded < 4) { main.replaceChildren(h("div", { class: "empty" }, h("span", { class: "spinner" }))); return; }
+  if (!nb) {
+    main.replaceChildren(h("div", { class: "card empty" },
+      h("h2", {}, "✍️ Turn handwritten notes into a study kit"),
+      h("p", {}, "Make a notebook for a course or chapter, drop in photos of your notes, and get summaries, quizzes, practice problems and flashcards."),
+      h("form", { class: "row", style: "max-width:420px;margin:16px auto 0", onsubmit: e => { e.preventDefault(); newNotebook(e.target.n.value); } },
+        h("input", { type: "text", name: "n", class: "grow", placeholder: "e.g. APSC 221 – Midterm 2", "data-keep": "" }), h("button", { class: "primary" }, "Create"))));
+    return;
+  }
+  const pages = nbPages(), due = dueCards().length;
+  const tabs = [["pages", `Pages (${pages.length})`], ["study", "Study"], ["cards", `Flashcards${due ? ` · ${due} due` : ""}`], ["saved", `Saved (${nbOutputs().length})`]];
+  main.replaceChildren(
+    h("div", { class: "head" },
+      h("h1", {}, nb.name),
+      h("button", { class: "ghost", onclick: () => renameNotebook(nb) }, "Rename"),
+      h("button", { class: "ghost", onclick: () => deleteNotebook(nb) }, "Delete")),
+    h("div", { class: "tabs" }, tabs.map(([k, label]) => h("button", { class: tab === k ? "on" : "", onclick: () => setTab(k) }, label))),
+    tab === "pages" ? renderPages() : tab === "study" ? renderStudy() : tab === "cards" ? renderCards() : renderSaved());
+}
+async function renameNotebook(nb) {
+  const name = prompt("Rename notebook", nb.name);
+  if (name && name.trim()) await C.notebooks.update(nb.id, { name: name.trim() });
+}
+async function deleteNotebook(nb) {
+  if (!confirm(`Delete "${nb.name}" with all its pages, flashcards and saved work?`)) return;
+  for (const p of S.pages.filter(p => p.notebookId === nb.id)) { await C.pages.delete(p.id); quick.files.delete(p.fileId).catch(() => {}); }
+  for (const c of S.cards.filter(c => c.notebookId === nb.id)) await C.cards.delete(c.id);
+  for (const o of S.outputs.filter(o => o.notebookId === nb.id)) await C.outputs.delete(o.id);
+  await C.notebooks.delete(nb.id);
+}
+
+/* ---------------------------------------------------------------- Pages tab */
+function renderPages() {
+  const pages = nbPages();
+  const drop = h("div", { class: "drop" },
+    h("div", { style: "font-size:28px" }, "📸"),
+    h("div", {}, h("b", {}, "Drop photos or PDFs of your notes here")),
+    h("div", { class: "row", style: "justify-content:center;margin-top:10px" },
+      h("button", { class: "primary", onclick: () => document.getElementById("filepick").click() }, "Choose files"),
+      h("button", { onclick: () => document.getElementById("camera").click() }, "Take photo")),
+    h("div", { class: "mut small", style: "margin-top:8px" }, "One photo per page works best. Good light, flat page, whole page in frame."));
+  drop.ondragover = e => { e.preventDefault(); drop.classList.add("over"); };
+  drop.ondragleave = () => drop.classList.remove("over");
+  drop.ondrop = e => { e.preventDefault(); drop.classList.remove("over"); addFiles([...e.dataTransfer.files]); };
+
+  const usable = pages.filter(p => p.status === "done").length;
+  return h("div", {}, drop,
+    pages.length ? h("p", { class: "mut small" }, `${usable} of ${pages.length} read. Untick pages to leave them out of study tools.`) : null,
+    pages.map((p, i) => pageCard(p, i)));
+}
+function statusBadge(p) {
+  if (active.has(p.id) || (p.status === "reading" && live[p.id] != null)) return h("span", { class: "badge acc" }, h("span", { class: "spinner", style: "width:10px;height:10px" }), " reading");
+  if (queue.includes(p.id) || p.status === "pending") return h("span", { class: "badge" }, "queued");
+  if (p.status === "reading") return h("span", { class: "badge warn" }, "interrupted");
+  if (p.status === "error") return h("span", { class: "badge bad" }, "failed");
+  return h("span", { class: "badge ok" }, p.truncated ? "read (cut off)" : "read");
+}
+function pageCard(p, i) {
+  const busy = active.has(p.id) || queue.includes(p.id);
+  const stuck = !busy && (p.status === "reading" || p.status === "pending" || p.status === "error");
+  const thumb = p.mime === "application/pdf" ? h("div", { class: "thumb" }, "PDF")
+    : h("img", { class: "thumb", src: p.fileUrl, alt: p.name, loading: "lazy" });
+  const body = h("div", { class: "grow" },
+    h("div", { class: "row" }, h("b", { class: "grow", style: "overflow-wrap:anywhere" }, `${i + 1}. ${p.name}`), statusBadge(p)),
+    p.error ? h("div", { class: "small", style: "color:var(--bad)" }, p.error) : null,
+    busy && live[p.id] != null ? h("div", { class: "live", "data-live": p.id }, live[p.id]) : null,
+    h("div", { class: "actions" },
+      p.status === "done" ? h("button", { class: "ghost", onclick: () => { openPreview.has(p.id) ? openPreview.delete(p.id) : openPreview.add(p.id); editing = null; renderMain(); } }, openPreview.has(p.id) ? "Hide text" : "View text") : null,
+      p.status === "done" ? h("button", { class: "ghost", onclick: () => { editing = p.id; openPreview.add(p.id); renderMain(); } }, "Edit") : null,
+      h("a", { href: p.fileUrl, target: "_blank", style: "padding:6px 8px;color:var(--mut)" }, "Original"),
+      stuck || p.status === "done" ? h("button", { class: "ghost", onclick: () => { if (p.status !== "done" || confirm("Re-read this page? Your edits to its text will be replaced.")) enqueue(p.id), render(); } }, p.status === "done" ? "Re-read" : "Retry") : null,
+      h("button", { class: "ghost", onclick: async () => { if (confirm("Delete this page?")) { await C.pages.delete(p.id); quick.files.delete(p.fileId).catch(() => {}); } } }, "Delete")),
+    openPreview.has(p.id) && p.status === "done" ? (editing === p.id ? editor(p) : h("div", { class: "preview" }, mdEl(p.text))) : null);
+  const tick = h("input", { type: "checkbox", checked: !excluded.has(p.id), title: "Use in study tools", style: "margin-top:4px",
+    onchange: e => { e.target.checked ? excluded.delete(p.id) : excluded.add(p.id); } });
+  return h("div", { class: "card page" }, tick, thumb, body);
+}
+function editor(p) {
+  const ta = h("textarea", { rows: 14, "data-keep": "", style: "font-family:ui-monospace,monospace;font-size:13px" });
+  ta.value = p.text;
+  return h("div", { class: "preview" },
+    h("div", { class: "mut small", style: "margin-bottom:6px" }, "Fix anything misread. Math uses \\( … \\) inline and \\[ … \\] on its own line."),
+    ta,
+    h("div", { class: "row", style: "margin-top:8px" },
+      h("button", { class: "primary", onclick: async () => { const text = ta.value; editing = null; await C.pages.update(p.id, { text }); renderMain(); toast("Saved"); } }, "Save"),
+      h("button", { onclick: () => { editing = null; renderMain(); } }, "Cancel")));
+}
+document.getElementById("filepick").onchange = e => { addFiles([...e.target.files]); e.target.value = ""; };
+document.getElementById("camera").onchange = e => { addFiles([...e.target.files]); e.target.value = ""; };
+
+/* ---------------------------------------------------------------- Study tab */
+// The study panel is built once per notebook and kept, so data updates never wipe a quiz in progress.
+let studyEl = null;
+function resetStudy() { studyEl = null; }
+function renderStudy() {
+  if (studyEl) { updateStudyCount(); return studyEl; }
+  const TOOLS = {
+    summary: ["📝 Summarize", "Key ideas, formulas and pitfalls"],
+    quiz: ["🎯 Test me", "Questions, graded with feedback"],
+    problems: ["🧮 Practice problems", "Worked problems, hidden solutions"],
+    cards: ["🃏 Flashcards", "Generate cards for your deck"],
+  };
+  let tool = "summary";
+  const count = h("select", {});
+  const focus = h("input", { type: "text", placeholder: "Optional focus, e.g. “bonds and annuities” or “things likely on the midterm”", "data-keep": "" });
+  const out = h("div", { class: "out" });
+  const go = h("button", { class: "primary" }, "Generate");
+  const counter = h("div", { class: "mut small", id: "studycount" });
+  const btns = Object.entries(TOOLS).map(([k, [t, d]]) => h("button", { class: "tool" + (k === tool ? " on" : ""), onclick: () => pick(k) }, h("b", {}, t), h("span", {}, d)));
+  function pick(k) {
+    tool = k;
+    btns.forEach((b, i) => b.classList.toggle("on", Object.keys(TOOLS)[i] === k));
+    const opts = { summary: [["Standard", "standard"], ["Short", "short"], ["Detailed", "detailed"]],
+                   quiz: [[5, 5], [8, 8], [12, 12]], problems: [[3, 3], [5, 5], [8, 8]], cards: [[10, 10], [20, 20], [30, 30]] }[k];
+    count.replaceChildren(...opts.map(([l, v]) => h("option", { value: v }, k === "summary" ? l : `${l} ${k === "quiz" ? "questions" : k === "problems" ? "problems" : "cards"}`)));
+  }
+  pick(tool);
+  go.onclick = async () => {
+    go.disabled = true;
+    out.replaceChildren(h("div", { class: "card mut" }, h("span", { class: "spinner" }), " Working… (this can take up to a minute)"));
+    try {
+      const run = { summary: runSummary, quiz: runQuiz, problems: runProblems, cards: runCards }[tool];
+      await run(out, count.value, focus.value.trim());
+    } catch (e) {
+      out.replaceChildren(h("div", { class: "card", style: "color:var(--bad)" }, e.message));
+    } finally { go.disabled = false; }
+  };
+  studyEl = h("div", {},
+    counter,
+    h("div", { class: "tools" }, btns),
+    h("div", { class: "opts" }, focus, count),
+    h("div", { class: "row", style: "margin:12px 0 20px" }, go),
+    out);
+  updateStudyCount();
+  return studyEl;
+}
+function updateStudyCount() {
+  const ps = nbPages(), use = ps.filter(p => !excluded.has(p.id) && p.status === "done").length;
+  const el = studyEl && studyEl.querySelector("#studycount");
+  if (el) el.textContent = ps.length ? `Using ${use} read page${use === 1 ? "" : "s"} of ${ps.length}.` : "Add some notes on the Pages tab first.";
+}
+const pageIds = () => nbPages().filter(p => !excluded.has(p.id) && p.status === "done").map(p => p.id);
+const focusLine = f => f ? `\nFocus on: ${f}` : "";
+
+async function runSummary(out, length, focus) {
+  const ctx = notesContext();
+  const size = { short: "Keep it to one screen.", standard: "", detailed: "Be thorough; cover every topic in the notes." }[length] || "";
+  const box = h("div", { class: "card" }); const body = h("div", { class: "md" });
+  box.append(body); out.replaceChildren(box);
+  let raf = 0;
+  const r = await quick.ai.stream(`${ctx}\n\nWrite a study summary of these notes.${focusLine(focus)}
+Structure it as: a 2-3 sentence overview; key concepts with plain-language explanations; every important formula with what each symbol means and when to use it; worked-example patterns if the notes have any; and common mistakes / things to remember. ${size}`,
+    { system: STUDY_SYSTEM, max_tokens: 16000, onText: (_, full) => { cancelAnimationFrame(raf); raf = requestAnimationFrame(() => body.innerHTML = md(full)); } });
+  cancelAnimationFrame(raf); body.innerHTML = md(r.text);
+  await C.outputs.create({ notebookId: current, kind: "summary", title: "Summary" + (focus ? ` – ${focus}` : ""), content: r.text, pageIds: pageIds() });
+  box.append(h("div", { class: "mut small", style: "margin-top:12px" }, "✓ Saved to the Saved tab"));
+}
+
+const QUIZ_SCHEMA = { type: "object", additionalProperties: false, required: ["questions"], properties: { questions: { type: "array", items: {
+  type: "object", additionalProperties: false, required: ["kind", "question", "choices", "correctChoice", "modelAnswer", "explanation"],
+  properties: { kind: { type: "string", enum: ["mcq", "short"] }, question: { type: "string" }, choices: { type: "array", items: { type: "string" } },
+    correctChoice: { type: "integer" }, modelAnswer: { type: "string" }, explanation: { type: "string" } } } } } };
+const GRADE_SCHEMA = { type: "object", additionalProperties: false, required: ["results"], properties: { results: { type: "array", items: {
+  type: "object", additionalProperties: false, required: ["index", "verdict", "feedback"],
+  properties: { index: { type: "integer" }, verdict: { type: "string", enum: ["correct", "partial", "incorrect"] }, feedback: { type: "string" } } } } } };
+
+async function runQuiz(out, n, focus) {
+  const ctx = notesContext();
+  const { questions } = await quick.ai.json(`${ctx}\n\nWrite ${n} questions that test real understanding of these notes, not just recall.${focusLine(focus)}
+Mix about half multiple choice ("mcq", exactly 4 plausible choices, correctChoice is the 0-based index) and half short answer ("short": explain why, compare, or do a quick calculation; choices = [] and correctChoice = -1).
+modelAnswer is a complete ideal answer. explanation says why the answer is right and what the common trap is. Order from easier to harder.`,
+    QUIZ_SCHEMA, { system: STUDY_SYSTEM, max_tokens: 16000 });
+  showQuiz(out, { questions, answers: null, results: null }, true);
+}
+function showQuiz(out, quiz, fresh) {
+  const answers = quiz.answers || quiz.questions.map(() => null);
+  const graded = !!quiz.results;
+  const box = h("div", { class: "card" });
+  if (graded) {
+    const pts = quiz.results.reduce((s, r) => s + (r.verdict === "correct" ? 1 : r.verdict === "partial" ? 0.5 : 0), 0);
+    box.append(h("h2", { style: "margin-top:0" }, `Score: ${pts} / ${quiz.questions.length}`));
+  }
+  quiz.questions.forEach((q, i) => {
+    const res = quiz.results?.find(r => r.index === i);
+    const qd = h("div", { class: "q" }, h("div", { class: "row" }, h("b", {}, `Q${i + 1}`),
+      res ? h("span", { class: "badge " + (res.verdict === "correct" ? "ok" : res.verdict === "partial" ? "warn" : "bad") }, res.verdict) : null),
+      mdEl(q.question));
+    if (q.kind === "mcq") {
+      q.choices.forEach((c, j) => {
+        const cls = graded ? (j === q.correctChoice ? " right" : j === answers[i] ? " wrong" : "") : "";
+        const radio = h("input", { type: "radio", name: `q${i}`, checked: answers[i] === j, disabled: graded, onchange: () => answers[i] = j });
+        qd.append(h("label", { class: "choice" + cls }, radio, mdInline(c)));
+      });
+    } else {
+      const ta = h("textarea", { rows: 3, placeholder: "Your answer…", disabled: graded, "data-keep": "" });
+      ta.value = answers[i] || ""; ta.oninput = () => answers[i] = ta.value;
+      qd.append(ta);
+    }
+    if (graded) {
+      qd.append(h("div", { class: "feedback" },
+        res?.feedback ? h("div", {}, mdEl(res.feedback)) : null,
+        h("details", {}, h("summary", {}, "Model answer & explanation"), mdEl(q.modelAnswer), mdEl(q.explanation))));
+    }
+    box.append(qd);
+  });
+  if (!graded) {
+    const submit = h("button", { class: "primary" }, "Submit answers");
+    submit.onclick = async () => {
+      submit.disabled = true; submit.textContent = "Grading…";
+      try { quiz.answers = answers; quiz.results = await grade(quiz); showQuiz(out, quiz, false);
+        const pts = quiz.results.reduce((s, r) => s + (r.verdict === "correct" ? 1 : r.verdict === "partial" ? 0.5 : 0), 0);
+        await C.outputs.create({ notebookId: current, kind: "quiz", title: `Quiz – ${pts}/${quiz.questions.length}`, quiz, pageIds: pageIds() });
+      } catch (e) { toast(e.message); submit.disabled = false; submit.textContent = "Submit answers"; }
+    };
+    box.append(h("div", { class: "row", style: "margin-top:8px" }, submit));
+  } else if (!fresh) {
+    box.append(h("div", { class: "mut small", style: "margin-top:12px" }, "✓ Saved to the Saved tab"));
+  }
+  out.replaceChildren(box);
+}
+async function grade(quiz) {
+  const results = [];
+  const shorts = [];
+  quiz.questions.forEach((q, i) => {
+    if (q.kind === "mcq") {
+      const a = quiz.answers[i];
+      results.push({ index: i, verdict: a === q.correctChoice ? "correct" : "incorrect",
+        feedback: a == null ? "No answer given." : a === q.correctChoice ? "" : `You picked: ${q.choices[a]}` });
+    } else shorts.push(i);
+  });
+  if (shorts.length) {
+    const items = shorts.map(i => `<item index="${i}">\n<question>${quiz.questions[i].question}</question>\n<model_answer>${quiz.questions[i].modelAnswer}</model_answer>\n<student_answer>${quiz.answers[i] || "(blank)"}</student_answer>\n</item>`).join("\n");
+    const { results: r } = await quick.ai.json(`Grade these short answers against the model answers.\n\n${items}\n\nverdict: "correct" if the key idea is right (wording doesn't matter), "partial" if partly right or missing a key step, "incorrect" otherwise. feedback: 1-3 sentences to the student saying what was good and exactly what was missing or wrong. Blank answers are incorrect.`,
+      GRADE_SCHEMA, { system: STUDY_SYSTEM, max_tokens: 8000, output_config: { effort: "low" } });
+    results.push(...r.filter(x => shorts.includes(x.index)));
+  }
+  return results.sort((a, b) => a.index - b.index);
+}
+
+const PROBLEM_SCHEMA = { type: "object", additionalProperties: false, required: ["problems"], properties: { problems: { type: "array", items: {
+  type: "object", additionalProperties: false, required: ["title", "difficulty", "problem", "solution", "finalAnswer"],
+  properties: { title: { type: "string" }, difficulty: { type: "string", enum: ["easy", "medium", "hard"] }, problem: { type: "string" },
+    solution: { type: "string" }, finalAnswer: { type: "string" } } } } } };
+async function runProblems(out, n, focus) {
+  const ctx = notesContext();
+  const { problems } = await quick.ai.json(`${ctx}\n\nWrite ${n} practice problems based on these notes, like ones that would appear on an exam for this course.${focusLine(focus)}
+Go from easy to hard. Use realistic numbers. solution is a full step-by-step worked solution using the methods and notation from the notes (Markdown, numbered steps). finalAnswer is the short final result.`,
+    PROBLEM_SCHEMA, { system: STUDY_SYSTEM, max_tokens: 24000 });
+  showProblems(out, problems);
+  await C.outputs.create({ notebookId: current, kind: "problems", title: `${problems.length} practice problems` + (focus ? ` – ${focus}` : ""), problems, pageIds: pageIds() });
+  out.firstChild.append(h("div", { class: "mut small", style: "margin-top:12px" }, "✓ Saved to the Saved tab"));
+}
+function showProblems(out, problems) {
+  const DIFF = { easy: "ok", medium: "warn", hard: "bad" };
+  out.replaceChildren(h("div", { class: "card" }, problems.map((p, i) => h("div", { class: "q" },
+    h("div", { class: "row" }, h("b", { class: "grow" }, `${i + 1}. ${p.title}`), h("span", { class: "badge " + DIFF[p.difficulty] }, p.difficulty)),
+    mdEl(p.problem),
+    h("details", {}, h("summary", {}, "Final answer"), mdEl(p.finalAnswer)),
+    h("details", {}, h("summary", {}, "Full solution"), mdEl(p.solution))))));
+}
+
+const CARD_SCHEMA = { type: "object", additionalProperties: false, required: ["cards"], properties: { cards: { type: "array", items: {
+  type: "object", additionalProperties: false, required: ["front", "back"], properties: { front: { type: "string" }, back: { type: "string" } } } } } };
+async function runCards(out, n, focus) {
+  const ctx = notesContext();
+  const existing = nbCards().map(c => c.front).slice(0, 200);
+  const { cards } = await quick.ai.json(`${ctx}\n\nMake ${n} flashcards from these notes.${focusLine(focus)}
+Each card tests one idea. Front: a specific question or prompt (definitions, "when do you use…", formula recall, interpreting a symbol, a quick concept check). Back: a short, precise answer (one formula or 1-2 sentences).
+${existing.length ? `Avoid duplicating these existing cards:\n${existing.map(f => "- " + f).join("\n")}` : ""}`,
+    CARD_SCHEMA, { system: STUDY_SYSTEM, max_tokens: 12000 });
+  const keep = cards.map(() => true);
+  const add = h("button", { class: "primary" }, `Add ${cards.length} to deck`);
+  const refreshBtn = () => { const k = keep.filter(Boolean).length; add.textContent = `Add ${k} to deck`; add.disabled = !k; };
+  add.onclick = async () => {
+    add.disabled = true;
+    for (const [i, c] of cards.entries()) if (keep[i]) await C.cards.create({ notebookId: current, front: c.front, back: c.back, box: 1, due: 0 });
+    out.replaceChildren(h("div", { class: "card" }, h("b", {}, `✓ Added ${keep.filter(Boolean).length} cards.`), " ",
+      h("button", { onclick: () => setTab("cards") }, "Review now →")));
+  };
+  out.replaceChildren(h("div", { class: "card" },
+    h("p", { class: "mut small", style: "margin-top:0" }, "Untick any you don't want."),
+    cards.map((c, i) => h("label", { class: "cardrow", style: "cursor:pointer" },
+      h("div", { class: "md" }, h("div", { html: md(c.front) })), h("div", { class: "md b mut", html: md(c.back) }),
+      h("input", { type: "checkbox", checked: true, onchange: e => { keep[i] = e.target.checked; refreshBtn(); } }))),
+    h("div", { class: "row", style: "margin-top:12px" }, add)));
+}
+
+/* ---------------------------------------------------------------- Flashcards tab */
+const INTERVAL_DAYS = [0, 1, 3, 7, 14, 30, 60];   // by box (1-6)
+function renderCards() {
+  if (review) return reviewView();
+  const cards = nbCards(), due = dueCards();
+  const front = h("textarea", { rows: 2, placeholder: "Front", "data-keep": "" });
+  const back = h("textarea", { rows: 2, placeholder: "Back", "data-keep": "" });
+  return h("div", {},
+    h("div", { class: "card" },
+      h("div", { class: "stats" },
+        h("div", { class: "stat" }, h("b", {}, due.length), h("span", { class: "mut small" }, "due now")),
+        h("div", { class: "stat" }, h("b", {}, cards.length), h("span", { class: "mut small" }, "in deck")),
+        h("div", { class: "stat" }, h("b", {}, cards.filter(c => (c.box || 1) >= 4).length), h("span", { class: "mut small" }, "well known"))),
+      h("div", { class: "row", style: "margin-top:14px" },
+        h("button", { class: "primary", disabled: !due.length, onclick: () => startReview(due) }, due.length ? `Review ${due.length} due` : "Nothing due 🎉"),
+        cards.length ? h("button", { onclick: () => startReview(cards) }, "Practice all") : null,
+        h("button", { onclick: () => setTab("study") }, "Generate more"))),
+    h("details", { class: "card" }, h("summary", {}, "Add a card by hand"),
+      h("div", { style: "display:grid;gap:8px;margin-top:10px" }, front, back,
+        h("div", {}, h("button", { onclick: async () => { if (!front.value.trim()) return;
+          await C.cards.create({ notebookId: current, front: front.value.trim(), back: back.value.trim(), box: 1, due: 0 }); toast("Card added"); } }, "Add card")))),
+    cards.length ? h("div", { class: "card" }, h("b", {}, "All cards"),
+      cards.slice().sort((a, b) => (a.box || 1) - (b.box || 1)).map(c => h("div", { class: "cardrow" },
+        h("div", { class: "md", html: md(c.front) }), h("div", { class: "md b mut", html: md(c.back) }),
+        h("div", { class: "row" }, h("span", { class: "badge", title: "Box: higher = known better" }, `box ${c.box || 1}`),
+          h("button", { class: "ghost", onclick: () => C.cards.delete(c.id) }, "✕"))))) : null);
+}
+function startReview(list) {
+  review = { queue: list.slice().sort(() => Math.random() - 0.5).map(c => c.id), shown: false, done: 0, again: 0 };
+  renderMain();
+}
+function reviewView() {
+  const id = review.queue[0];
+  const c = S.cards.find(x => x.id === id);
+  if (!c) {
+    if (review.queue.length) { review.queue.shift(); return reviewView(); }
+    return h("div", { class: "card empty" }, h("h2", {}, "Session done ✓"),
+      h("p", {}, `${review.done} cards reviewed${review.again ? `, ${review.again} to see again soon` : ""}.`),
+      h("button", { class: "primary", onclick: () => { review = null; renderMain(); } }, "Back to deck"));
+  }
+  const flip = () => { review.shown = true; renderMain(); };
+  const answer = async (kind) => {
+    const box = c.box || 1;
+    const nb = kind === "again" ? 1 : kind === "good" ? Math.min(box + 1, 6) : Math.min(box + 2, 6);
+    const due = kind === "again" ? now() + 600 : now() + INTERVAL_DAYS[nb] * 86400;
+    review.queue.shift(); review.done++; review.shown = false;
+    if (kind === "again") { review.again++; review.queue.splice(Math.min(3, review.queue.length), 0, c.id); }
+    renderMain();
+    await C.cards.update(c.id, { box: nb, due });
+  };
+  return h("div", {},
+    h("div", { class: "row mut small", style: "margin-bottom:8px" }, h("span", { class: "grow" }, `${review.queue.length} left`),
+      h("button", { class: "ghost", onclick: () => { review = null; renderMain(); } }, "End session")),
+    h("div", { class: "card flash", onclick: review.shown ? null : flip },
+      h("div", { class: "side" }, "Question"), mdEl(c.front),
+      review.shown ? h("div", { class: "back" }, h("div", { class: "side" }, "Answer"), mdEl(c.back))
+                   : h("div", { class: "mut small", style: "margin-top:18px" }, "Tap or press space to reveal")),
+    review.shown ? h("div", { class: "grade" },
+      h("button", { onclick: () => answer("again") }, "😵 Again", h("div", { class: "mut small" }, "10 min")),
+      h("button", { onclick: () => answer("good") }, "🙂 Good", h("div", { class: "mut small" }, `${INTERVAL_DAYS[Math.min((c.box || 1) + 1, 6)]}d`)),
+      h("button", { onclick: () => answer("easy") }, "😎 Easy", h("div", { class: "mut small" }, `${INTERVAL_DAYS[Math.min((c.box || 1) + 2, 6)]}d`))) : null);
+}
+document.addEventListener("keydown", e => {
+  if (!review || tab !== "cards" || /INPUT|TEXTAREA/.test(document.activeElement?.tagName)) return;
+  if (e.code === "Space") { e.preventDefault(); if (!review.shown) { review.shown = true; renderMain(); } }
+  if (review.shown && ["1", "2", "3"].includes(e.key)) document.querySelectorAll(".grade button")[+e.key - 1]?.click();
+});
+
+/* ---------------------------------------------------------------- Saved tab */
+function renderSaved() {
+  const outs = nbOutputs();
+  if (viewing) {
+    const o = outs.find(x => x.id === viewing);
+    if (o) {
+      const holder = h("div", {});
+      if (o.kind === "summary") holder.append(h("div", { class: "card" }, mdEl(o.content)));
+      if (o.kind === "problems") showProblems(holder, o.problems);
+      if (o.kind === "quiz") showQuiz(holder, o.quiz, true);
+      return h("div", {}, h("div", { class: "row", style: "margin-bottom:10px" },
+        h("button", { onclick: () => { viewing = null; renderMain(); } }, "← Back"), h("b", { class: "grow" }, o.title)), holder);
+    }
+    viewing = null;
+  }
+  if (!outs.length) return h("div", { class: "empty" }, "Summaries, quizzes and practice problems you generate are saved here.");
+  const ICON = { summary: "📝", quiz: "🎯", problems: "🧮" };
+  return h("div", { class: "card" }, outs.map(o => h("div", { class: "cardrow", style: "grid-template-columns:1fr auto" },
+    h("a", { href: "#", onclick: e => { e.preventDefault(); viewing = o.id; renderMain(); } }, `${ICON[o.kind] || ""} ${o.title}`),
+    h("div", { class: "row" }, h("span", { class: "mut small" }, ago(o.createdAt)),
+      h("button", { class: "ghost", onclick: () => confirm("Delete?") && C.outputs.delete(o.id) }, "✕")))));
+}
+
+/* ---------------------------------------------------------------- boot */
+render();
+// Pick up pages that were mid-read when the tab closed: they show "interrupted" with a Retry button.
+setInterval(() => { if (tab === "cards" && !review) renderNav(); }, 60000);
+</script>
+</body>
+</html>
