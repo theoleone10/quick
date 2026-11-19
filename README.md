@@ -53,6 +53,7 @@ Shopify's BigQuery integration was left out.
 | `QUICK_DOMAIN` | `localhost` | e.g. `quick.example.com`, which needs wildcard DNS `*.quick.example.com` |
 | `QUICK_SECRET` | unset | when set, viewers log in with a name + this password, and the CLI must send it too |
 | `QUICK_USER` | your OS user | identity used when there is no login |
+| `QUICK_PUBLIC_SITES` | unset | comma-separated sites that open without login; guests get the database and rooms, not AI or uploads |
 | `QUICK_AI_MODEL` | `claude-opus-5-5` | |
 | `QUICK_DATA` | `./data` | |
 

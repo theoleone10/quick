@@ -1,0 +1,949 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#FBF7F0">
+<meta name="robots" content="noindex">
+<title>Chores</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='18' fill='%23FFE8A3'/%3E%3Cpath d='M18 33l9 9 19-20' fill='none' stroke='%232A2521' stroke-width='7' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&display=swap" rel="stylesheet">
+<script src="/_quick/quick.js"></script>
+<style>
+  :root {
+    --paper: #FBF7F0;
+    --card: #FFFFFF;
+    --ink: #2A2521;
+    --ink-2: #5E554D;
+    --muted: #9A8F84;
+    --line: #EEE7DC;
+    --line-2: #E2D8C9;
+    --sunk: #F3EDE3;
+    --accent: #F2643D;
+    --danger: #C2410C;
+    --r: 18px;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; }
+  body {
+    background: var(--paper); color: var(--ink);
+    font-family: "Bricolage Grotesque", ui-rounded, system-ui, sans-serif;
+    font-size: 16px; line-height: 1.4; -webkit-font-smoothing: antialiased;
+    min-height: 100dvh;
+  }
+  button { font: inherit; color: inherit; border: 0; background: none; padding: 0; cursor: pointer; }
+  button:disabled { cursor: default; }
+  input { font: inherit; color: inherit; }
+  svg { display: block; }
+
+  .wrap { max-width: 460px; margin: 0 auto; padding: calc(env(safe-area-inset-top) + 22px) 16px calc(env(safe-area-inset-bottom) + 48px); }
+
+  /* ---------- header */
+  .top { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 22px; }
+  .eyebrow { font-size: 12.5px; font-weight: 650; letter-spacing: .09em; text-transform: uppercase; color: var(--muted); }
+  h1 { font-size: 40px; line-height: 1.02; font-weight: 760; letter-spacing: -.028em; margin: 8px 0 8px; }
+  .hl {
+    background: linear-gradient(transparent 56%, var(--hl) 56%, var(--hl) 90%, transparent 90%);
+    padding: 0 .06em; margin: 0 -.03em; border-radius: 2px;
+  }
+  button.hl { font-weight: inherit; letter-spacing: inherit; }
+  .sub { margin: 0; color: var(--ink-2); font-size: 17px; }
+  .linkish { color: var(--ink); font-weight: 650; text-decoration: underline; text-decoration-color: var(--line-2); text-underline-offset: 3px; text-decoration-thickness: 2px; }
+  .icon-btn {
+    width: 44px; height: 44px; border-radius: 14px; flex: none; margin-top: 2px;
+    background: var(--card); border: 1px solid var(--line); display: grid; place-items: center;
+    color: var(--ink-2); transition: transform .12s;
+  }
+  .icon-btn:active { transform: scale(.94); }
+  .icon-btn svg { width: 20px; height: 20px; }
+
+  /* ---------- week strip */
+  .week {
+    background: var(--card); border: 1px solid var(--line); border-radius: 22px;
+    padding: 10px 8px 8px; margin-bottom: 30px;
+    box-shadow: 0 10px 28px -20px rgba(90, 64, 30, .35);
+  }
+  .week-head { display: flex; align-items: center; justify-content: space-between; padding: 0 2px 8px; }
+  .week-title { font-weight: 650; font-size: 15px; display: flex; align-items: baseline; gap: 10px; }
+  .back-today { font-size: 13.5px; color: var(--accent); font-weight: 700; }
+  .nav { width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; color: var(--ink-2); }
+  .nav:active { background: var(--sunk); }
+  .nav svg { width: 18px; height: 18px; }
+  .days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; }
+  .day { display: flex; flex-direction: column; align-items: center; gap: 1px; padding: 8px 0 7px; border-radius: 14px; transition: background .15s, color .15s; }
+  .day .dl { font-size: 11px; font-weight: 650; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+  .day .dn { font-size: 19px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .day .dot { width: 6px; height: 6px; border-radius: 50%; margin-top: 3px; background: transparent; }
+  .day .dot.on { background: var(--dot); }
+  .day .dot.ok { background: transparent; box-shadow: inset 0 0 0 1.5px var(--dot); }
+  .day.today .dn { color: var(--accent); }
+  .day.sel { background: var(--ink); }
+  .day.sel .dl { color: rgba(251, 247, 240, .55); }
+  .day.sel .dn { color: var(--paper); }
+  .day.sel .dot.on { background: var(--paper); }
+  .day.sel .dot.ok { box-shadow: inset 0 0 0 1.5px var(--paper); }
+
+  /* ---------- sections */
+  .sec-head { display: flex; align-items: baseline; justify-content: space-between; margin: 0 4px 10px; }
+  .sec-head h2 { font-size: 12.5px; font-weight: 700; letter-spacing: .09em; text-transform: uppercase; color: var(--muted); margin: 0; }
+  .sec-head .count { font-size: 13px; color: var(--muted); font-weight: 650; font-variant-numeric: tabular-nums; }
+  .list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 32px; }
+
+  .task {
+    display: flex; align-items: center; gap: 14px;
+    background: var(--card); border: 1px solid var(--line); border-radius: var(--r); padding: 12px;
+  }
+  .tile { width: 48px; height: 48px; border-radius: 14px; display: grid; place-items: center; font-size: 24px; flex: none; background: var(--tile, var(--sunk)); transition: opacity .2s, filter .2s; }
+  .t-body { flex: 1; min-width: 0; }
+  .t-name { font-weight: 650; font-size: 17px; letter-spacing: -.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .t-meta { font-size: 14px; color: var(--muted); margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .check {
+    width: 42px; height: 42px; border-radius: 50%; flex: none;
+    border: 2px solid var(--line-2); display: grid; place-items: center;
+    transition: transform .15s;
+  }
+  .check:active { transform: scale(.88); }
+  .check svg { width: 20px; height: 20px; fill: none; stroke: #fff; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 24; stroke-dashoffset: 24; }
+  .task.done .check { background: var(--c-ink); border-color: var(--c-ink); }
+  .task.done .check svg { stroke-dashoffset: 0; }
+  .task.done .t-name { text-decoration: line-through; text-decoration-thickness: 2px; color: var(--muted); }
+  .task.done .tile { filter: saturate(.3); opacity: .6; }
+  .task.pop .check { animation: pop .38s cubic-bezier(.3, 1.6, .5, 1); }
+  .task.pop .check svg { animation: draw .28s .06s ease-out both; }
+  @keyframes pop { 0% { transform: scale(.7); } 100% { transform: scale(1); } }
+  @keyframes draw { from { stroke-dashoffset: 24; } to { stroke-dashoffset: 0; } }
+
+  .note {
+    border: 1.5px dashed var(--line-2); border-radius: var(--r); padding: 18px 16px;
+    text-align: center; color: var(--ink-2); font-size: 15.5px;
+  }
+
+  .house { background: var(--card); border: 1px solid var(--line); border-radius: 22px; padding: 2px 14px; margin-bottom: 32px; }
+  .mate { display: flex; gap: 12px; align-items: flex-start; padding: 14px 0; }
+  .mate + .mate { border-top: 1px solid var(--line); }
+  .mate-body { flex: 1; min-width: 0; }
+  .mate-name { font-weight: 680; font-size: 16.5px; line-height: 38px; }
+  .pills { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 2px; }
+  .pill {
+    display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px 6px 9px; border-radius: 999px;
+    background: var(--bg); color: var(--fg); font-size: 14.5px; font-weight: 620; transition: transform .12s;
+  }
+  .pill:active { transform: scale(.95); }
+  .pill.done { background: transparent; box-shadow: inset 0 0 0 1.5px var(--line-2); color: var(--muted); text-decoration: line-through; }
+  .pill small { font-size: 12px; font-weight: 600; opacity: .7; margin-left: 2px; }
+  .free { color: var(--muted); font-size: 15px; margin-top: -2px; }
+
+  .avatar {
+    width: 38px; height: 38px; border-radius: 50%; flex: none; display: grid; place-items: center;
+    font-weight: 760; font-size: 16px; background: var(--bg); color: var(--fg); text-transform: uppercase;
+  }
+  .avatar.sm { width: 30px; height: 30px; font-size: 13px; }
+  .avatar.lg { width: 60px; height: 60px; font-size: 24px; }
+
+  .welcome { background: var(--card); border: 1px solid var(--line); border-radius: 24px; padding: 28px 22px 22px; text-align: center; }
+  .stack { font-size: 34px; display: flex; justify-content: center; margin-bottom: 12px; }
+  .stack span { display: grid; place-items: center; width: 60px; height: 60px; border-radius: 18px; margin: 0 -5px; border: 3px solid var(--card); }
+  .stack span:nth-child(1) { background: #FFE8A3; transform: rotate(-8deg); }
+  .stack span:nth-child(2) { background: #C9EED6; transform: translateY(-6px); z-index: 1; }
+  .stack span:nth-child(3) { background: #FFD3BF; transform: rotate(8deg); }
+  .welcome h3 { font-size: 24px; font-weight: 750; letter-spacing: -.02em; margin: 6px 0 6px; }
+  .welcome p { margin: 0 auto 20px; color: var(--ink-2); max-width: 30ch; }
+
+  .skeleton { height: 14px; border-radius: 7px; background: var(--sunk); margin-bottom: 12px; animation: pulse 1.2s ease-in-out infinite alternate; }
+  @keyframes pulse { to { opacity: .45; } }
+
+  /* ---------- buttons + fields */
+  .btn {
+    height: 50px; padding: 0 20px; border-radius: 15px; background: var(--ink); color: var(--paper);
+    font-weight: 680; font-size: 16px; display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    transition: transform .12s, opacity .15s;
+  }
+  .btn:active:not(:disabled) { transform: scale(.97); }
+  .btn:disabled { opacity: .35; }
+  .btn.ghost { background: transparent; color: var(--ink); box-shadow: inset 0 0 0 1.5px var(--line-2); }
+  .btn.danger { background: transparent; color: var(--danger); box-shadow: inset 0 0 0 1.5px #F4D2C4; }
+  .btn.danger.armed { background: var(--danger); color: #fff; box-shadow: none; }
+  .btn svg { width: 18px; height: 18px; }
+  .field {
+    width: 100%; height: 50px; border-radius: 15px; border: 1.5px solid var(--line-2); background: var(--card);
+    padding: 0 15px; outline: none; font-size: 16px; transition: border-color .15s;
+  }
+  .field:focus { border-color: var(--ink); }
+  .field::placeholder { color: #B8AEA2; }
+
+  /* ---------- setup */
+  .bar { display: flex; margin-bottom: 18px; }
+  .back {
+    display: inline-flex; align-items: center; gap: 2px; font-weight: 680; height: 40px; padding: 0 14px 0 8px;
+    border-radius: 12px; background: var(--card); border: 1px solid var(--line);
+  }
+  .back svg { width: 18px; height: 18px; }
+  .setup h1 { font-size: 34px; }
+  .label { font-size: 12.5px; font-weight: 700; letter-spacing: .09em; text-transform: uppercase; color: var(--muted); margin: 30px 4px 10px; }
+  .people { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+  .person {
+    display: inline-flex; align-items: center; gap: 8px; height: 42px; padding: 0 15px 0 6px; border-radius: 999px;
+    background: var(--card); border: 1px solid var(--line); font-weight: 640; transition: transform .12s;
+  }
+  .person:active { transform: scale(.96); }
+  .add-row { display: flex; gap: 8px; }
+  .add-row .btn { flex: none; }
+  .row {
+    display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; padding: 10px 14px 10px 10px;
+    background: var(--card); border: 1px solid var(--line); border-radius: var(--r);
+  }
+  .row .tile { width: 44px; height: 44px; font-size: 22px; border-radius: 13px; }
+  .row .chev { color: var(--line-2); width: 18px; height: 18px; flex: none; }
+  .warn { color: var(--accent); }
+  .add-chore {
+    width: 100%; height: 56px; border: 1.5px dashed var(--line-2); border-radius: var(--r);
+    font-weight: 680; color: var(--ink-2); display: flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  .add-chore svg { width: 18px; height: 18px; }
+  .add-chore:disabled { opacity: .45; }
+  .foot { color: var(--muted); font-size: 14.5px; margin: 34px 4px 0; line-height: 1.5; }
+  .foot b { color: var(--ink-2); font-weight: 680; }
+
+  /* ---------- sheets */
+  .scrim { position: fixed; inset: 0; background: rgba(42, 37, 33, .3); opacity: 0; transition: opacity .25s; z-index: 20; }
+  .scrim.in { opacity: 1; }
+  .sheet {
+    position: fixed; left: 0; right: 0; bottom: 0; margin: 0 auto; max-width: 520px; max-height: 92dvh; overflow-y: auto;
+    background: var(--paper); border-radius: 26px 26px 0 0; z-index: 21; overscroll-behavior: contain;
+    padding: 10px 20px calc(env(safe-area-inset-bottom) + 22px);
+    transform: translateY(100%); transition: transform .34s cubic-bezier(.2, .9, .25, 1);
+    box-shadow: 0 -10px 40px -20px rgba(42, 37, 33, .35);
+  }
+  .sheet.in { transform: none; }
+  .grab { width: 40px; height: 5px; border-radius: 3px; background: var(--line-2); margin: 0 auto 16px; }
+  .sheet h3 { font-size: 25px; font-weight: 760; letter-spacing: -.02em; margin: 0 0 6px; }
+  .sheet .label { margin: 24px 2px 10px; }
+  .hint { font-size: 15px; color: var(--ink-2); margin: 0 0 4px; }
+  .hint.small { font-size: 14px; color: var(--muted); margin: -4px 2px 10px; }
+  .err { color: var(--danger); font-weight: 600; font-size: 14.5px; margin: 14px 2px 0; }
+
+  .namebox { display: flex; gap: 10px; align-items: center; margin-top: 14px; }
+  .namebox .tile { width: 50px; height: 50px; font-size: 26px; background: #FFF1CC; }
+  .emojis { display: flex; gap: 6px; overflow-x: auto; margin: 10px -20px 0; padding: 2px 20px 6px; scrollbar-width: none; }
+  .emojis::-webkit-scrollbar { display: none; }
+  .emo { flex: none; width: 44px; height: 44px; border-radius: 13px; font-size: 22px; background: var(--card); border: 1.5px solid var(--line); }
+  .emo.on { border-color: var(--ink); background: #FFF1CC; }
+
+  .seg { display: flex; background: var(--sunk); border-radius: 15px; padding: 4px; gap: 4px; }
+  .seg button { flex: 1; height: 42px; border-radius: 11px; font-weight: 650; font-size: 15px; color: var(--ink-2); transition: background .15s; }
+  .seg button.on { background: var(--card); color: var(--ink); box-shadow: 0 1px 3px rgba(42, 37, 33, .12); }
+
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip {
+    position: relative; display: inline-flex; align-items: center; gap: 8px; height: 44px; padding: 0 15px 0 6px;
+    border-radius: 999px; background: var(--card); border: 1.5px solid var(--line); font-weight: 640;
+    transition: background .15s, border-color .15s;
+  }
+  .chip.on { background: var(--bg); border-color: var(--fg); color: var(--fg); }
+  .chip.on .avatar { background: var(--card); }
+  .chip .badge {
+    position: absolute; top: -6px; right: -5px; width: 21px; height: 21px; border-radius: 50%;
+    background: var(--ink); color: var(--paper); font-size: 11.5px; font-weight: 760; display: grid; place-items: center;
+  }
+  .daygrid { display: flex; flex-direction: column; gap: 6px; }
+  .dayrow { display: flex; align-items: center; gap: 10px; background: var(--card); border: 1px solid var(--line); border-radius: 15px; padding: 6px 8px 6px 14px; }
+  .dayrow .dname { width: 38px; font-weight: 700; font-size: 14.5px; color: var(--ink-2); flex: none; }
+  .dayrow .opts { display: flex; gap: 6px; flex: 1; overflow-x: auto; scrollbar-width: none; justify-content: flex-end; }
+  .dayrow .opts::-webkit-scrollbar { display: none; }
+  .face { flex: none; border-radius: 50%; padding: 2px; border: 2px solid transparent; transition: border-color .15s, opacity .15s; opacity: .38; }
+  .face.on { border-color: var(--fg); opacity: 1; }
+  .face .avatar { width: 32px; height: 32px; font-size: 13px; }
+  .actions { display: flex; gap: 10px; margin-top: 28px; }
+  .actions .btn { flex: 1; }
+  .actions .btn.danger { flex: none; }
+
+  .swatches { display: flex; gap: 10px; flex-wrap: wrap; }
+  .swatch { width: 40px; height: 40px; border-radius: 50%; background: var(--bg); border: 3px solid var(--paper); box-shadow: 0 0 0 1.5px var(--line-2); }
+  .swatch.on { box-shadow: 0 0 0 2.5px var(--fg); }
+
+  .who-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 18px; }
+  .who {
+    display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 20px 10px 16px;
+    background: var(--card); border: 1.5px solid var(--line); border-radius: 22px; font-weight: 680; font-size: 17px;
+    transition: transform .15s;
+  }
+  .who:active { transform: scale(.96) rotate(-1deg); }
+  .just-looking { display: block; margin: 18px auto 2px; color: var(--muted); font-weight: 650; padding: 8px 12px; }
+
+  .toast {
+    position: fixed; left: 50%; bottom: calc(env(safe-area-inset-bottom) + 22px); z-index: 40;
+    transform: translate(-50%, 16px); opacity: 0; transition: .25s; pointer-events: none;
+    background: var(--ink); color: var(--paper); padding: 12px 18px; border-radius: 14px; font-weight: 620; white-space: nowrap;
+  }
+  .toast.in { transform: translate(-50%, 0); opacity: 1; }
+  .bit { position: fixed; width: 8px; height: 12px; border-radius: 2px; pointer-events: none; z-index: 50; }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+  }
+</style>
+</head>
+<body>
+<main class="wrap" id="root"></main>
+
+<script>
+(() => {
+  // ------------------------------------------------------------------ constants
+  const COLORS = [
+    { bg: "#FFE8A3", fg: "#7A5B00", pop: "#FFC94A" },  // butter
+    { bg: "#C9EED6", fg: "#24704A", pop: "#5BC88A" },  // mint
+    { bg: "#FFD3BF", fg: "#9C4523", pop: "#FF8A5C" },  // peach
+    { bg: "#DFD6FA", fg: "#5440A0", pop: "#9C86F0" },  // lilac
+    { bg: "#CFE5FA", fg: "#265F93", pop: "#5AA9EE" },  // sky
+    { bg: "#FAD0DE", fg: "#9A305A", pop: "#F06C9B" },  // rose
+  ];
+  const EMOJI = ["🍽️", "🧽", "🗑️", "♻️", "🚽", "🛁", "🧹", "🧺", "🍳", "🧊", "🪴", "🛒", "🐾", "🪟", "📦", "🧴", "🛏️", "✨"];
+  const WD = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+  const WD_LONG = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+  const COUNT = ["Nothing", "One thing", "Two things", "Three things", "Four things", "Five things", "Six things", "Seven things"];
+  const DAY = 864e5;
+
+  const ICON = {
+    sliders: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2.2"/><circle cx="9" cy="17" r="2.2"/></svg>',
+    left: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>',
+    right: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>',
+    check: '<svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
+    plus: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>',
+  };
+
+  // ------------------------------------------------------------------ helpers
+  const store = {
+    get(k) { try { return localStorage.getItem(k); } catch { return null; } },
+    set(k, v) { try { v == null ? localStorage.removeItem(k) : localStorage.setItem(k, v); } catch {} },
+  };
+
+  function h(tag, props, ...kids) {
+    const el = document.createElement(tag);
+    for (const [k, v] of Object.entries(props || {})) {
+      if (v == null || v === false) continue;
+      if (k === "class") el.className = v;
+      else if (k === "style") for (const [sk, sv] of Object.entries(v)) el.style.setProperty(sk, sv);
+      else if (k === "icon") el.insertAdjacentHTML("afterbegin", ICON[v]);   // static markup only
+      else if (k.startsWith("on")) el.addEventListener(k.slice(2), v);
+      else if (k === "value") el.value = v;
+      else el.setAttribute(k, v === true ? "" : v);
+    }
+    for (const c of kids.flat(Infinity)) if (c != null && c !== false) el.append(c instanceof Node ? c : String(c));
+    return el;
+  }
+
+  const mod = (a, n) => ((a % n) + n) % n;
+  const dayNum = (d) => Math.floor(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) / DAY);
+  const fromDayNum = (n) => { const u = new Date(n * DAY); return new Date(u.getUTCFullYear(), u.getUTCMonth(), u.getUTCDate()); };
+  const weekOf = (n) => Math.floor((n - 4) / 7);   // Monday-start weeks (day 4 = Mon 5 Jan 1970)
+  const wd = (n) => mod(n - 4, 7);                 // 0 = Monday
+  const fmtShort = (n) => fromDayNum(n).toLocaleDateString(undefined, { month: "short", day: "numeric" });
+  const colorOf = (p) => COLORS[(p && p.color) || 0] || COLORS[0];
+  const pvars = (p) => { const c = colorOf(p); return { "--bg": c.bg, "--fg": c.fg }; };
+  const initial = (name) => (name || "?").trim().charAt(0) || "?";
+
+  // ------------------------------------------------------------------ state
+  const db = {
+    people: quick.db.collection("people"),
+    chores: quick.db.collection("chores"),
+    done: quick.db.collection("done"),
+  };
+  const S = {
+    people: [], byId: new Map(), chores: [], done: new Map(), pending: new Map(),
+    seen: new Set(), loaded: false,
+    view: "home", todayN: dayNum(new Date()), selN: null,
+    me: store.get("chores.me"), popId: null, askedWho: false,
+  };
+  S.selN = S.todayN;
+
+  const meP = () => (S.me && S.byId.get(S.me)) || null;
+  const rota = (c) => (c.turns || []).filter((id) => S.byId.has(id));
+  const live = (id) => (id && S.byId.has(id) ? id : null);
+
+  function whoFor(c, n) {
+    if (c.mode === "one") return live(c.one);
+    if (c.freq === "daily" && c.mode === "byday") return live((c.byday || {})[wd(n)]);
+    const t = rota(c);
+    if (!t.length) return null;
+    const unit = c.freq === "weekly" ? weekOf(n) : n;
+    return t[mod(unit + (c.offset || 0), t.length)];
+  }
+  const doneKey = (c, n) => (c.freq === "weekly" ? "w" + weekOf(n) : "d" + n);
+  const doneId = (c, n) => c.id + "-" + doneKey(c, n);
+  const isDone = (id) => (S.pending.has(id) ? S.pending.get(id) : S.done.has(id));
+
+  function itemsFor(pid, n) {
+    return S.chores
+      .filter((c) => whoFor(c, n) === pid)
+      .sort((a, b) => (a.freq === "weekly") - (b.freq === "weekly") || a.name.localeCompare(b.name));
+  }
+
+  // ------------------------------------------------------------------ data
+  function ready(k) {
+    S.seen.add(k);
+    if (S.seen.size < 3) return;
+    S.loaded = true;
+    render();
+    maybeAskWho();
+  }
+
+  db.people.watch((docs) => {
+    S.people = docs;
+    S.byId = new Map(docs.map((p) => [p.id, p]));
+    ready("people");
+    if (S.loaded) render();
+  }, { order: "createdAt" });
+
+  db.chores.watch((docs) => {
+    S.chores = docs;
+    ready("chores");
+    if (S.loaded) render();
+  }, { order: "createdAt" });
+
+  let doneSig = "", pruned = false;
+  db.done.watch((docs) => {
+    S.done = new Map(docs.map((d) => [d.id, d]));
+    for (const [id, v] of S.pending) if (S.done.has(id) === v) S.pending.delete(id);
+    const sig = [...S.done.keys(), "|", ...S.pending.entries()].join(",");
+    const changed = sig !== doneSig;
+    doneSig = sig;
+    ready("done");
+    if (S.loaded && changed) render();
+    if (!pruned) { pruned = true; prune(docs); }
+  }, { order: "-updatedAt", limit: 500 });
+
+  // Keep the done list small: drop check-offs older than ~5 weeks.
+  function prune(docs) {
+    const cut = S.todayN - 35;
+    docs.filter((d) => {
+      const k = d.key || "", v = +k.slice(1);
+      return (k[0] === "d" && v < cut) || (k[0] === "w" && v < weekOf(cut));
+    }).slice(0, 20).forEach((d) => db.done.delete(d.id).catch(() => {}));
+  }
+
+  setTimeout(() => {
+    if (!S.loaded) {
+      root.replaceChildren(h("div", { class: "welcome" },
+        h("h3", {}, "Can't reach the house"),
+        h("p", {}, "Check your connection and give it another tap."),
+        h("button", { class: "btn", onclick: () => location.reload() }, "Try again")));
+    }
+  }, 9000);
+
+  async function toggle(c, n) {
+    const id = doneId(c, n);
+    const now = !isDone(id);
+    S.pending.set(id, now);
+    S.popId = now ? id : null;
+    render();
+    S.popId = null;
+
+    const me = meP();
+    if (now && me && whoFor(c, n) === me.id && itemsFor(me.id, n).every((x) => isDone(doneId(x, n)))) {
+      const el = document.querySelector(`[data-id="${id}"] .check`);
+      if (el) { const r = el.getBoundingClientRect(); confetti(r.left + r.width / 2, r.top + r.height / 2); }
+    }
+    try {
+      if (now) await db.done.set(id, { chore: c.id, key: doneKey(c, n), by: me ? me.name : "someone" });
+      else await db.done.delete(id);
+    } catch (e) {
+      S.pending.delete(id);
+      render();
+      toast("Couldn't save that. Try again?");
+    }
+  }
+
+  // ------------------------------------------------------------------ render
+  const root = document.getElementById("root");
+
+  function render() {
+    const a = document.activeElement;
+    const k = a && a.dataset && a.dataset.k;
+    const val = k ? a.value : null;
+    const view = !S.loaded ? loading() : S.view === "setup" ? setup() : home();
+    root.replaceChildren(view);
+    if (k) {
+      const el = root.querySelector(`[data-k="${k}"]`);
+      if (el) { el.value = val; el.focus(); }
+    }
+  }
+
+  function loading() {
+    return h("div", {},
+      h("div", { class: "skeleton", style: { width: "38%" } }),
+      h("div", { class: "skeleton", style: { width: "70%", height: "40px", "border-radius": "12px" } }),
+      h("div", { class: "skeleton", style: { width: "55%" } }));
+  }
+
+  function header(titleKids, sub) {
+    return h("header", { class: "top" },
+      h("div", {},
+        h("div", { class: "eyebrow" }, `${WD_LONG[wd(S.todayN)]} · ${fmtShort(S.todayN)}`),
+        h("h1", {}, titleKids),
+        h("p", { class: "sub" }, sub)),
+      h("button", { class: "icon-btn", "aria-label": "House setup", icon: "sliders", onclick: () => go("setup") }));
+  }
+
+  function go(view) {
+    S.view = view;
+    render();
+    window.scrollTo(0, 0);
+  }
+
+  function home() {
+    const me = meP();
+    const n = S.selN;
+    const isToday = n === S.todayN;
+    const when = isToday ? "today" : n === S.todayN + 1 ? "tomorrow" : n === S.todayN - 1 ? "yesterday" : "on " + WD_LONG[wd(n)];
+
+    // headline
+    let title, sub;
+    if (me) title = ["Hey ", h("button", { class: "hl", style: { "--hl": colorOf(me).bg }, onclick: askWho }, me.name), "."];
+    else title = "Who's on what";
+
+    if (!S.people.length) sub = "First, tell it who lives here.";
+    else if (!S.chores.length) sub = "No chores yet. Enjoy it while it lasts.";
+    else if (me) {
+      const mine = itemsFor(me.id, n);
+      const left = mine.filter((c) => !isDone(doneId(c, n))).length;
+      if (!mine.length) sub = `Nothing on your plate ${when}.`;
+      else if (!left) sub = `All done ${when}. Nice work.`;
+      else sub = `${COUNT[left] || left + " things"} left ${when}.`;
+    } else {
+      sub = ["Tap your name to see yours first. ", h("button", { class: "linkish", onclick: askWho }, "Who are you?")];
+    }
+
+    const out = [header(title, sub)];
+
+    if (!S.people.length) {
+      out.push(welcome("Who lives here?", "Add everyone in the house, then the chores. It works out whose turn it is.", "Set up the house"));
+      return h("div", {}, out);
+    }
+    if (!S.chores.length) {
+      out.push(welcome("What needs doing?", "Dishes, bins, bathroom… make them daily or weekly, and have people take turns.", "Add chores"));
+      return h("div", {}, out);
+    }
+
+    out.push(weekStrip(me));
+
+    const dayLabel = isToday ? "Today" : WD_LONG[wd(n)];
+    if (me) {
+      const mine = itemsFor(me.id, n);
+      const doneCount = mine.filter((c) => isDone(doneId(c, n))).length;
+      out.push(h("div", { class: "sec-head" },
+        h("h2", {}, `Yours · ${dayLabel}`),
+        mine.length ? h("span", { class: "count" }, `${doneCount}/${mine.length}`) : null));
+      out.push(h("div", { class: "list" },
+        mine.length ? mine.map((c) => taskCard(c, n, me)) : h("div", { class: "note" }, `Free ${isToday ? "day" : "that day"}. Go touch grass 🌿`)));
+    }
+
+    const others = S.people.filter((p) => !me || p.id !== me.id);
+    if (others.length) {
+      out.push(h("div", { class: "sec-head" }, h("h2", {}, `${me ? "Everyone else" : "The house"} · ${dayLabel}`)));
+      out.push(h("div", { class: "house" }, others.map((p) => mateRow(p, n))));
+    }
+
+    const unassigned = S.chores.filter((c) => !whoFor(c, n) && !(c.freq === "daily" && c.mode === "byday"));
+    if (unassigned.length) {
+      out.push(h("div", { class: "note" }, `${unassigned.map((c) => c.name).join(", ")} ${unassigned.length > 1 ? "have" : "has"} nobody assigned. `,
+        h("button", { class: "linkish", onclick: () => go("setup") }, "Fix it")));
+    }
+    return h("div", {}, out);
+  }
+
+  function welcome(title, body, cta) {
+    return h("div", { class: "welcome" },
+      h("div", { class: "stack" }, h("span", {}, "🧽"), h("span", {}, "🧺"), h("span", {}, "🗑️")),
+      h("h3", {}, title),
+      h("p", {}, body),
+      h("button", { class: "btn", onclick: () => go("setup") }, cta));
+  }
+
+  function weekStrip(me) {
+    const start = S.selN - wd(S.selN);
+    const a = fromDayNum(start), b = fromDayNum(start + 6);
+    const label = a.getMonth() === b.getMonth()
+      ? `${fmtShort(start)} – ${b.getDate()}`
+      : `${fmtShort(start)} – ${fmtShort(start + 6)}`;
+    const days = [];
+    for (let i = 0; i < 7; i++) {
+      const n = start + i;
+      let dot = null;
+      if (me) {
+        const mine = S.chores.filter((c) => c.freq === "daily" && whoFor(c, n) === me.id);
+        if (mine.length) {
+          const all = mine.every((c) => isDone(doneId(c, n)));
+          dot = all ? "ok" : "on";
+        }
+      }
+      days.push(h("button", {
+        class: "day" + (n === S.todayN ? " today" : "") + (n === S.selN ? " sel" : ""),
+        "aria-label": WD_LONG[i] + " " + fmtShort(n),
+        onclick: () => { S.selN = n; render(); },
+      },
+        h("span", { class: "dl" }, WD[i].charAt(0)),
+        h("span", { class: "dn" }, fromDayNum(n).getDate()),
+        h("span", { class: "dot" + (dot ? " " + dot : ""), style: me ? { "--dot": colorOf(me).fg } : null })));
+    }
+    const thisWeek = weekOf(S.selN) === weekOf(S.todayN);
+    return h("section", { class: "week" },
+      h("div", { class: "week-head" },
+        h("button", { class: "nav", "aria-label": "Previous week", icon: "left", onclick: () => { S.selN -= 7; render(); } }),
+        h("div", { class: "week-title" },
+          h("span", {}, thisWeek ? "This week" : label),
+          S.selN !== S.todayN ? h("button", { class: "back-today", onclick: () => { S.selN = S.todayN; render(); } }, "Today") : null),
+        h("button", { class: "nav", "aria-label": "Next week", icon: "right", onclick: () => { S.selN += 7; render(); } })),
+      h("div", { class: "days" }, days));
+  }
+
+  function metaFor(c, n, pid) {
+    const base = c.freq === "weekly" ? "This week" : c.mode === "byday" ? `Every ${WD_LONG[wd(n)]}` : "Every day";
+    if (c.mode !== "turns") return base;
+    const next = whoFor(c, c.freq === "weekly" ? n + 7 : n + 1);
+    if (!next || next === pid) return base;
+    return `${base} · ${S.byId.get(next).name} is next`;
+  }
+
+  function taskCard(c, n, p) {
+    const id = doneId(c, n);
+    const done = isDone(id);
+    const col = colorOf(p);
+    return h("div", {
+      class: "task" + (done ? " done" : "") + (S.popId === id ? " pop" : ""),
+      "data-id": id, style: { "--tile": col.bg, "--c-ink": col.fg },
+    },
+      h("div", { class: "tile" }, c.emoji || "✨"),
+      h("div", { class: "t-body" },
+        h("div", { class: "t-name" }, c.name),
+        h("div", { class: "t-meta" }, metaFor(c, n, p.id))),
+      h("button", {
+        class: "check", icon: "check", "aria-pressed": done ? "true" : "false",
+        "aria-label": (done ? "Undo " : "Mark done: ") + c.name, onclick: () => toggle(c, n),
+      }));
+  }
+
+  function mateRow(p, n) {
+    const items = itemsFor(p.id, n);
+    return h("div", { class: "mate" },
+      h("div", { class: "avatar", style: pvars(p) }, initial(p.name)),
+      h("div", { class: "mate-body" },
+        h("div", { class: "mate-name" }, p.name),
+        items.length
+          ? h("div", { class: "pills" }, items.map((c) => {
+              const done = isDone(doneId(c, n));
+              return h("button", {
+                class: "pill" + (done ? " done" : ""), style: pvars(p),
+                "aria-pressed": done ? "true" : "false",
+                title: c.freq === "weekly" ? "This week" : "Today",
+                onclick: () => toggle(c, n),
+              }, `${c.emoji || "✨"} ${c.name}`, c.freq === "weekly" ? h("small", {}, "this week") : null);
+            }))
+          : h("div", { class: "free" }, "Nothing. Lucky.")));
+  }
+
+  // ------------------------------------------------------------------ setup view
+  function setup() {
+    const input = h("input", {
+      class: "field", "data-k": "newperson", placeholder: "Add a name", maxlength: "24",
+      autocomplete: "off", enterkeyhint: "done",
+      onkeydown: (e) => { if (e.key === "Enter") addPerson(input); },
+    });
+    return h("div", { class: "setup" },
+      h("div", { class: "bar" }, h("button", { class: "back", icon: "left", onclick: () => go("home") }, "Done")),
+      h("h1", {}, "House setup"),
+      h("p", { class: "sub" }, "Changes save straight away for everyone."),
+
+      h("div", { class: "label" }, "Who lives here"),
+      S.people.length ? h("div", { class: "people" }, S.people.map((p) =>
+        h("button", { class: "person", onclick: () => editPerson(p) },
+          h("div", { class: "avatar sm", style: pvars(p) }, initial(p.name)), p.name))) : null,
+      h("div", { class: "add-row" }, input,
+        h("button", { class: "btn", onclick: () => addPerson(input) }, "Add")),
+
+      h("div", { class: "label" }, "Chores"),
+      h("div", { class: "list" },
+        S.chores.map(choreRow),
+        h("button", { class: "add-chore", icon: "plus", disabled: !S.people.length, onclick: () => editChore(null) }, "Add a chore")),
+      !S.people.length ? h("p", { class: "hint small" }, "Add a person first.") : null,
+
+      h("p", { class: "foot" },
+        "Write ", h("b", {}, location.host), " to your NFC sticker as a URL record (NFC Tools does it in about ten seconds). Anyone who taps it lands here."));
+  }
+
+  function choreRow(c) {
+    const names = (ids) => ids.map((id) => S.byId.get(id).name).join(" → ");
+    const freq = c.freq === "weekly" ? "Weekly" : "Daily";
+    let who, bad = false;
+    if (c.mode === "one") { who = live(c.one) ? S.byId.get(c.one).name : ((bad = true), "needs someone"); }
+    else if (c.mode === "byday") {
+      const set = Object.values(c.byday || {}).filter(live).length;
+      who = set ? "set by weekday" : ((bad = true), "needs someone");
+    } else {
+      const t = rota(c);
+      who = t.length ? (t.length > 1 ? "turns: " + names(t) : S.byId.get(t[0]).name) : ((bad = true), "needs someone");
+    }
+    return h("button", { class: "row", onclick: () => editChore(c) },
+      h("div", { class: "tile" }, c.emoji || "✨"),
+      h("div", { class: "t-body" },
+        h("div", { class: "t-name" }, c.name),
+        h("div", { class: "t-meta" + (bad ? " warn" : "") }, `${freq} · ${who}`)),
+      h("span", { class: "chev", icon: "right" }));
+  }
+
+  function nextColor() {
+    const used = new Set(S.people.map((p) => p.color));
+    for (let i = 0; i < COLORS.length; i++) if (!used.has(i)) return i;
+    return S.people.length % COLORS.length;
+  }
+
+  async function addPerson(input) {
+    const name = input.value.trim().slice(0, 24);
+    if (!name) { input.focus(); return; }
+    input.value = "";
+    try { await db.people.create({ name, color: nextColor() }); }
+    catch { input.value = name; toast("Couldn't add them. Try again?"); }
+  }
+
+  // ------------------------------------------------------------------ sheets
+  function openSheet(build) {
+    const scrim = h("div", { class: "scrim" });
+    const sheet = h("div", { class: "sheet", role: "dialog", "aria-modal": "true" }, h("div", { class: "grab" }));
+    let closed = false;
+    const close = () => {
+      if (closed) return;
+      closed = true;
+      scrim.classList.remove("in");
+      sheet.classList.remove("in");
+      setTimeout(() => { scrim.remove(); sheet.remove(); }, 300);
+    };
+    scrim.onclick = close;
+    sheet.append(build(close));
+    document.body.append(scrim, sheet);
+    requestAnimationFrame(() => requestAnimationFrame(() => { scrim.classList.add("in"); sheet.classList.add("in"); }));
+    return close;
+  }
+
+  function maybeAskWho() {
+    if (S.askedWho || !S.people.length || S.me === "_" || meP()) return;
+    S.askedWho = true;
+    askWho();
+  }
+
+  function askWho() {
+    openSheet((close) => {
+      const pick = (id) => { S.me = id; store.set("chores.me", id); close(); render(); };
+      return h("div", {},
+        h("h3", {}, "Who's this?"),
+        h("p", { class: "hint" }, "This phone will remember, so your stuff shows up first."),
+        h("div", { class: "who-grid" }, S.people.map((p) =>
+          h("button", { class: "who", onclick: () => pick(p.id) },
+            h("div", { class: "avatar lg", style: pvars(p) }, initial(p.name)), p.name))),
+        h("button", { class: "just-looking", onclick: () => pick("_") }, "Just looking"));
+    });
+  }
+
+  function editPerson(p) {
+    let color = p.color || 0, armed = false;
+    openSheet((close) => {
+      const name = h("input", { class: "field", value: p.name, maxlength: "24", autocomplete: "off" });
+      const swatches = h("div", { class: "swatches" });
+      const paintSw = () => swatches.replaceChildren(...COLORS.map((c, i) =>
+        h("button", {
+          class: "swatch" + (i === color ? " on" : ""), "aria-label": "Colour " + (i + 1),
+          style: { "--bg": c.bg, "--fg": c.fg }, onclick: () => { color = i; paintSw(); },
+        })));
+      paintSw();
+      const del = h("button", {
+        class: "btn danger", onclick: async () => {
+          if (!armed) { armed = true; del.classList.add("armed"); del.textContent = "Tap again"; return; }
+          close();
+          try { await db.people.delete(p.id); } catch { toast("Couldn't remove them."); }
+        },
+      }, "Remove");
+      const save = h("button", {
+        class: "btn", onclick: async () => {
+          const n = name.value.trim().slice(0, 24);
+          if (!n) { name.focus(); return; }
+          close();
+          try { await db.people.update(p.id, { name: n, color }); } catch { toast("Couldn't save that."); }
+        },
+      }, "Save");
+      return h("div", {},
+        h("h3", {}, p.name),
+        h("div", { class: "label" }, "Name"), name,
+        h("div", { class: "label" }, "Colour"), swatches,
+        h("div", { class: "actions" }, del, save));
+    });
+  }
+
+  function editChore(c) {
+    const today = S.todayN;
+    const s = {
+      name: c ? c.name : "",
+      emoji: c ? c.emoji || "✨" : EMOJI[0],
+      freq: c ? c.freq : "daily",
+      mode: c ? c.mode : "turns",
+      turns: c ? rota(c) : S.people.map((p) => p.id),
+      one: c ? live(c.one) : null,
+      byday: c ? { ...(c.byday || {}) } : {},
+      up: null, err: "", armed: false, saving: false,
+    };
+    s.up = (c && c.mode === "turns" && whoFor(c, today)) || s.turns[0] || null;
+
+    openSheet((close) => {
+      const tile = h("div", { class: "tile" }, s.emoji);
+      const name = h("input", {
+        class: "field", placeholder: "Dishes, bins, bathroom…", maxlength: "40", value: s.name,
+        autocomplete: "off", oninput: (e) => { s.name = e.target.value; },
+      });
+      const emojis = h("div", { class: "emojis" }, EMOJI.map((e) => h("button", {
+        class: "emo" + (e === s.emoji ? " on" : ""),
+        onclick: () => {
+          s.emoji = e; tile.textContent = e;
+          emojis.querySelectorAll(".emo").forEach((b) => b.classList.toggle("on", b.textContent === e));
+        },
+      }, e)));
+      const dyn = h("div");
+
+      const seg = (opts, cur, set) => h("div", { class: "seg" }, opts.map(([v, label]) =>
+        h("button", { class: v === cur ? "on" : "", onclick: () => { set(v); paint(); } }, label)));
+
+      const personChip = (p, on, onclick, badge) => h("button", { class: "chip" + (on ? " on" : ""), style: pvars(p), onclick },
+        h("div", { class: "avatar sm", style: pvars(p) }, initial(p.name)), p.name,
+        badge ? h("span", { class: "badge" }, badge) : null);
+
+      function paint() {
+        const unitWord = s.freq === "daily" ? "today" : "this week";
+        const parts = [
+          h("div", { class: "label" }, "How often"),
+          seg([["daily", "Every day"], ["weekly", "Once a week"]], s.freq, (v) => {
+            s.freq = v;
+            if (v === "weekly" && s.mode === "byday") s.mode = "turns";
+          }),
+          h("div", { class: "label" }, "Who does it"),
+          seg(s.freq === "daily"
+            ? [["turns", "Take turns"], ["one", "One person"], ["byday", "By weekday"]]
+            : [["turns", "Take turns"], ["one", "One person"]], s.mode, (v) => { s.mode = v; }),
+        ];
+
+        if (s.mode === "turns") {
+          parts.push(h("p", { class: "hint small", style: { "margin-top": "12px" } },
+            `Tap people in the order they go. It moves to the next person every ${s.freq === "daily" ? "day" : "Monday"}.`));
+          parts.push(h("div", { class: "chips" }, S.people.map((p) => {
+            const i = s.turns.indexOf(p.id);
+            return personChip(p, i >= 0, () => {
+              if (i >= 0) s.turns.splice(i, 1); else s.turns.push(p.id);
+              if (!s.turns.includes(s.up)) s.up = s.turns[0] || null;
+              paint();
+            }, i >= 0 && s.turns.length > 1 ? i + 1 : null);
+          })));
+          if (s.turns.length > 1) {
+            parts.push(h("div", { class: "label" }, `Who's up ${unitWord}?`));
+            parts.push(h("div", { class: "chips" }, s.turns.map((id) => {
+              const p = S.byId.get(id);
+              return personChip(p, s.up === id, () => { s.up = id; paint(); });
+            })));
+          }
+        } else if (s.mode === "one") {
+          parts.push(h("div", { class: "chips", style: { "margin-top": "14px" } }, S.people.map((p) =>
+            personChip(p, s.one === p.id, () => { s.one = p.id; paint(); }))));
+        } else {
+          parts.push(h("p", { class: "hint small", style: { "margin-top": "12px" } }, "Pick who's on each day. Leave a day empty to skip it."));
+          parts.push(h("div", { class: "daygrid" }, WD.map((d, i) => h("div", { class: "dayrow" },
+            h("span", { class: "dname" }, d),
+            h("div", { class: "opts" }, S.people.map((p) => h("button", {
+              class: "face" + (s.byday[i] === p.id ? " on" : ""), style: pvars(p), "aria-label": `${d}: ${p.name}`,
+              onclick: () => { if (s.byday[i] === p.id) delete s.byday[i]; else s.byday[i] = p.id; paint(); },
+            }, h("div", { class: "avatar", style: pvars(p) }, initial(p.name)))))))));
+        }
+
+        if (s.err) parts.push(h("p", { class: "err" }, s.err));
+
+        const del = c ? h("button", {
+          class: "btn danger" + (s.armed ? " armed" : ""),
+          onclick: async () => {
+            if (!s.armed) { s.armed = true; paint(); return; }
+            close();
+            try { await db.chores.delete(c.id); } catch { toast("Couldn't delete it."); }
+          },
+        }, s.armed ? "Tap again" : "Delete") : null;
+        const save = h("button", { class: "btn", disabled: s.saving, onclick: doSave }, c ? "Save" : "Add chore");
+        parts.push(h("div", { class: "actions" }, del, save));
+        dyn.replaceChildren(...parts);
+      }
+
+      async function doSave() {
+        const nm = s.name.trim();
+        s.err = !nm ? "Give it a name."
+          : s.mode === "turns" && !s.turns.length ? "Pick at least one person."
+          : s.mode === "one" && !s.one ? "Pick who does it."
+          : s.mode === "byday" && !Object.values(s.byday).some(live) ? "Pick someone for at least one day."
+          : "";
+        if (s.err) { paint(); if (!nm) name.focus(); return; }
+        const data = { name: nm, emoji: s.emoji, freq: s.freq, mode: s.mode, turns: s.turns, one: s.one, byday: s.byday, offset: 0 };
+        if (s.mode === "turns") {
+          const unit = s.freq === "daily" ? today : weekOf(today);
+          data.offset = mod(Math.max(0, s.turns.indexOf(s.up)) - unit, s.turns.length);
+        }
+        s.saving = true; paint();
+        try {
+          if (c) await db.chores.set(c.id, data); else await db.chores.create(data);
+          close();
+        } catch {
+          s.saving = false; s.err = "Couldn't save. Check your connection."; paint();
+        }
+      }
+
+      paint();
+      return h("div", {},
+        h("h3", {}, c ? "Edit chore" : "New chore"),
+        h("div", { class: "namebox" }, tile, name),
+        emojis,
+        dyn);
+    });
+  }
+
+  // ------------------------------------------------------------------ flourishes
+  let toastEl, toastTimer;
+  function toast(msg) {
+    if (!toastEl) { toastEl = h("div", { class: "toast", role: "status" }); document.body.append(toastEl); }
+    toastEl.textContent = msg;
+    toastEl.classList.add("in");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toastEl.classList.remove("in"), 2600);
+  }
+
+  function confetti(x, y) {
+    if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    for (let i = 0; i < 26; i++) {
+      const bit = h("i", { class: "bit", style: { left: x - 4 + "px", top: y - 6 + "px", background: COLORS[i % COLORS.length].pop } });
+      document.body.append(bit);
+      const ang = -Math.PI / 2 + (Math.random() - 0.5) * Math.PI * 1.3;
+      const dist = 70 + Math.random() * 110;
+      const dx = Math.cos(ang) * dist, dy = Math.sin(ang) * dist;
+      bit.animate([
+        { transform: "translate(0,0) rotate(0deg)", opacity: 1 },
+        { transform: `translate(${dx}px,${dy}px) rotate(${Math.random() * 360}deg)`, opacity: 1, offset: 0.55 },
+        { transform: `translate(${dx * 1.15}px,${dy + 140}px) rotate(${Math.random() * 720}deg)`, opacity: 0 },
+      ], { duration: 1100 + Math.random() * 500, easing: "cubic-bezier(.15,.7,.35,1)" }).onfinish = () => bit.remove();
+    }
+  }
+
+  // A phone left open overnight should roll over to the new day.
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState !== "visible") return;
+    const t = dayNum(new Date());
+    if (t !== S.todayN) {
+      if (S.selN === S.todayN) S.selN = t;
+      S.todayN = t;
+      render();
+    }
+  });
+
+  render();
+})();
+</script>
+</body>
+</html>

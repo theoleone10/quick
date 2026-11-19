@@ -28,6 +28,7 @@ Config (environment variables):
     QUICK_GOOGLE_CLIENT_ID, QUICK_GOOGLE_CLIENT_SECRET   switch login to "Sign in with Google"
     QUICK_ALLOWED_EMAILS         comma-separated emails allowed in
     QUICK_ALLOWED_DOMAINS        comma-separated email domains allowed in (e.g. mycompany.com)
+    QUICK_PUBLIC_SITES           comma-separated sites that open without sign-in (db + rooms only)
 """
 
 import base64
@@ -79,6 +80,10 @@ GOOGLE_SECRET = os.environ.get("QUICK_GOOGLE_CLIENT_SECRET")
 ALLOWED_EMAILS = {e.strip().lower() for e in os.environ.get("QUICK_ALLOWED_EMAILS", "").split(",") if e.strip()}
 ALLOWED_DOMAINS = {d.strip().lower().lstrip("@") for d in os.environ.get("QUICK_ALLOWED_DOMAINS", "").split(",") if d.strip()}
 AUTH = "google" if GOOGLE_ID else ("password" if SECRET else "none")
+# Sites anyone can open without signing in. Guests get the page, quick.js, me, db and rooms;
+# AI and file uploads stay behind login so a public link can't run up bills or host files.
+PUBLIC_SITES = {s.strip().lower() for s in os.environ.get("QUICK_PUBLIC_SITES", "").split(",") if s.strip()}
+GUEST = "guest"
 GOOGLE_AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth"
 GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token"
 GOOGLE_USERINFO_URL = "https://openidconnect.googleapis.com/v1/userinfo"
@@ -364,6 +369,14 @@ class Handler(BaseHTTPRequestHandler):
         self.email = session.get("e")
         return session.get("n")
 
+    @staticmethod
+    def guest_allowed(method, path):
+        if not path.startswith("/_quick/"):
+            return method == "GET"  # the site's static files
+        if path == "/_quick/quick.js" or path == "/_quick/api/me":
+            return True
+        return path.startswith(("/_quick/api/db/", "/_quick/api/rooms/"))
+
     def route(self, method):
         url = urlsplit(self.path)
         path = unquote(url.path)
@@ -386,6 +399,8 @@ class Handler(BaseHTTPRequestHandler):
                 raise HTTPError(403, "cross-origin write blocked")
 
         user = self.current_user()
+        if user is None and site in PUBLIC_SITES and self.guest_allowed(method, path):
+            user = GUEST
         if user is None:
             if path.startswith("/_quick/api/"):
                 raise HTTPError(401, "not logged in")
